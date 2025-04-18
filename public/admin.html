@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Dashboard</title>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body>
+  <h2>Admin Login</h2>
+  <input type="text" id="username" placeholder="Username">
+  <input type="password" id="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+
+  <div id="admin-interface" style="display: none;">
+    <h3>Active Sessions</h3>
+    <ul id="active-sessions"></ul>
+    <div id="chat-box">
+      <div id="messages"></div>
+      <input type="text" id="message-input">
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    let socket;
+    let currentSessionId;
+
+    async function login() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      
+      const response = await fetch('/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      
+      const data = await response.json();
+      if (data.token) {
+        document.getElementById('admin-interface').style.display = 'block';
+        socket = io({
+          auth: {
+            token: data.token
+          }
+        });
+        
+        socket.on('connect', () => {
+          console.log('Connected as admin');
+        });
+        
+        socket.on('join session', (sessionId) => {
+          currentSessionId = sessionId;
+          loadMessages(sessionId);
+        });
+      }
+    }
+
+    function loadMessages(sessionId) {
+      // Fetch and display messages from DB (implement API endpoint)
+    }
+
+    function sendMessage() {
+      const message = document.getElementById('message-input').value;
+      socket.emit('chat message', currentSessionId, message);
+    }
+  </script>
+</body>
+</html>
