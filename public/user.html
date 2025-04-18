@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>User Chat</title>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body>
+  <div id="chat-container">
+    <div id="messages"></div>
+    <input type="text" id="message-input" placeholder="Type a message...">
+    <button onclick="sendMessage()">Send</button>
+  </div>
+
+  <script>
+    const userId = "user_" + Math.random().toString(36).substr(2, 9);
+    const socket = io('/user');
+
+    socket.emit('start chat', userId);
+
+    let sessionId;
+    socket.on('session started', (id) => {
+      sessionId = id;
+    });
+
+    socket.on('chat message', (message, sender) => {
+      const messagesDiv = document.getElementById('messages');
+      messagesDiv.innerHTML += `<div><strong>${sender}:</strong> ${message}</div>`;
+    });
+
+    function sendMessage() {
+      const message = document.getElementById('message-input').value;
+      socket.emit('chat message', sessionId, message);
+    }
+  </script>
+</body>
+</html>
